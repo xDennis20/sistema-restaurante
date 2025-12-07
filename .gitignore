@@ -1,0 +1,17 @@
+--- Django ---
+
+*.log
+*.pot
+*.pyc
+pycache/
+db.sqlite3
+media/
+--- Entornos Virtuales (¡Muy Importante!) ---
+
+venv/
+.venv/
+env/
+--- IDEs (Configuraciones mías que no le importan a nadie) ---
+
+.idea/
+.vscode/
