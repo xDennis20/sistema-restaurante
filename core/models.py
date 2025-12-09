@@ -9,13 +9,20 @@ class Categoria(models.Model):
         return self.nombre
 
 class Plato(models.Model):
+    TALLAS = [
+        ("P", "Pequeño"),
+        ("M", "Mediano"),
+        ("G", "Grande"),
+        ("U", "Unico")
+    ]
     nombre = models.CharField(max_length=200)
     precio = models.DecimalField(max_digits=10,decimal_places=2)
     descripcion = models.TextField(blank=True,null=True, verbose_name="Descripicion")
     disponible = models.BooleanField(default=True,verbose_name= "Disponible?")
+    talla = models.CharField(max_length=1, choices=TALLAS, default="U", verbose_name= "Tamaño")
 
     def __str__(self):
-        return f"{self.nombre}: {self.precio}"
+        return f"{self.nombre}: ${self.precio} Tamaño: {self.get_talla_display()}"
 
 class Mesa(models.Model):
     numero = models.IntegerField(unique=True,verbose_name="Numero de mesa")
