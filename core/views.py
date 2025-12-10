@@ -1,4 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.views.decorators.http import require_safe, require_POST
+
 from .models import Plato,Categoria,DetallePedido,Mesa,Pedido
 # Create your views here.
 
@@ -48,3 +50,12 @@ def ver_cuenta(request, mesa_id: int):
         "total": total
     }
     return render(request,"core/pedido.html",contexto)
+
+@require_POST
+def cobrar_mesa(request, mesa_id: int):
+    mesa = get_object_or_404(Mesa,id=mesa_id)
+    pedido = Pedido.objects.filter(mesa=mesa, estado="pendiente").first()
+    if pedido:
+        pedido.estado = "estado"
+        pedido.save()
+    return redirect('menu')

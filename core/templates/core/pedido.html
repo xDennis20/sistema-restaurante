@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mesa #{{ mesa.numero }} - Comanda</title>
-    <!-- Importamos Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f4f6f9; }
-        .total-box { background-color: #fff; border-top: 2px solid #ddd; position: sticky; bottom: 0; padding: 15px; }
+        .total-box {
+            background-color: #fff;
+            border-top: 2px solid #ddd;
+            position: sticky;
+            bottom: 0;
+            padding: 15px;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Encabezado -->
-    <nav class="navbar navbar-dark bg-dark mb-3">
+    <nav class="navbar navbar-dark bg-dark mb-3 shadow-sm">
         <div class="container-fluid">
             <span class="navbar-brand fw-bold">🍽️ Mesa #{{ mesa.numero }}</span>
             <a href="{% url 'menu' %}" class="btn btn-sm btn-outline-light">➕ Agregar Platos</a>
@@ -22,15 +27,16 @@
     </nav>
 
     <div class="container pb-5">
+
+        <!-- APERTURA DEL IF -->
         {% if pedido %}
-            <!-- Tarjeta del Pedido -->
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white d-flex justify-content-between">
-                    <span class="text-muted">Orden #{{ pedido.id }}</span>
+
+            <div class="card shadow-sm border-0 mb-5">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <strong class="text-muted">Orden #{{ pedido.id }}</strong>
                     <span class="badge bg-warning text-dark">{{ pedido.get_estado_display }}</span>
                 </div>
 
-                <!-- Lista de Platos -->
                 <ul class="list-group list-group-flush">
                     {% for detalle in detalles %}
                     <li class="list-group-item d-flex justify-content-between align-items-center py-3">
@@ -40,7 +46,7 @@
                                 {{ detalle.cantidad }} x ${{ detalle.precio_unitario }}
                             </small>
                             {% if detalle.nota %}
-                                <div class="text-danger small">Note: {{ detalle.nota }}</div>
+                                <div class="text-danger small">Nota: {{ detalle.nota }}</div>
                             {% endif %}
                         </div>
                         <span class="fw-bold">${{ detalle.subtotal }}</span>
@@ -49,29 +55,65 @@
                 </ul>
             </div>
 
-            <!-- Resumen de Totales (Pegado abajo) -->
+            <!-- CAJA DE TOTAL Y BOTÓN -->
             <div class="total-box shadow-lg">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="mb-0 text-secondary">Total a Pagar:</h4>
                     <h2 class="mb-0 text-success fw-bold">${{ total }}</h2>
                 </div>
-                <button class="btn btn-success w-100 btn-lg rounded-pill">
+
+                <!-- Botón que activa el Modal -->
+                <button type="button" class="btn btn-success w-100 btn-lg rounded-pill shadow" data-bs-toggle="modal" data-bs-target="#modalCobrar">
                     💸 COBRAR AHORA
                 </button>
             </div>
 
+            <!-- MODAL (VENTANA FLOTANTE) -->
+            <div class="modal fade" id="modalCobrar" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title fw-bold">💰 Confirmar Cobro</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center p-4">
+                            <div style="font-size: 3rem;">🧾</div>
+                            <h4 class="mt-2">Mesa #{{ mesa.numero }}</h4>
+                            <p class="text-muted">¿Confirmas que recibiste el pago total de <strong>${{ total }}</strong>?</p>
+                            <p class="small text-secondary">Esta acción cerrará la mesa y guardará la venta.</p>
+                        </div>
+                        <div class="modal-footer justify-content-center border-0 pb-4">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+
+                            <!-- FORMULARIO REAL DE COBRO -->
+                            <form action="{% url 'cobrar' mesa.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold">
+                                    ¡SÍ, COBRAR!
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- EL ELSÉ QUE ESTABA PERDIDO -->
         {% else %}
-            <!-- Pantalla Vacía (Mesa Libre) -->
+
             <div class="text-center mt-5 pt-5">
                 <div style="font-size: 4rem;">📭</div>
                 <h3 class="mt-3 text-secondary">La mesa está libre</h3>
-                <p class="text-muted">No hay pedidos activos.</p>
-                <a href="{% url 'menu' %}" class="btn btn-primary btn-lg mt-3 px-5 rounded-pill">
-                    🚀 Iniciar Pedido
+                <p class="text-muted">No hay pedidos activos en este momento.</p>
+
+                <a href="{% url 'menu' %}" class="btn btn-primary btn-lg mt-3 px-5 rounded-pill shadow">
+                    🚀 Iniciar Nuevo Pedido
                 </a>
             </div>
+
+        <!-- EL CIERRE FINAL -->
         {% endif %}
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

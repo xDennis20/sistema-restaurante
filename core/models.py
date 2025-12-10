@@ -34,7 +34,7 @@ class Mesa(models.Model):
 class Pedido(models.Model):
     ESTADOS = [
         ("pendiente","Pendiente"),
-        ("Pagado","Pagado")
+        ("pagado","Pagado")
     ]
 
     mesa = models.ForeignKey(Mesa,on_delete=models.PROTECT)
