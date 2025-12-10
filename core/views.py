@@ -28,3 +28,23 @@ def agregar_producto_a_mesa(request,plato_id: int,mesa_id: int):
         plato = plato,
     )
     return redirect("menu")
+
+def ver_cuenta(request, mesa_id: int):
+    mesa = get_object_or_404(Mesa,id=mesa_id)
+    pedido = Pedido.objects.filter(mesa=mesa,estado="pendiente").first()
+    if pedido:
+        detalles = pedido.detallepedido_set.all()
+        total = 0
+        for detalle in detalles:
+            total += detalle.subtotal
+    else:
+        detalles = []
+        total = 0
+
+    contexto = { #Conexion con HTML, es decir variables para HTML
+        "mesa": mesa,
+        "pedido": pedido,
+        "detalles": detalles,
+        "total": total
+    }
+    return render(request,"core/pedido.html",contexto)
