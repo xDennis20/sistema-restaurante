@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from core.views import menu_restuarante
+from core.views import menu_restuarante,agregar_producto_a_mesa
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', menu_restuarante, name= 'menu')
+    path('', menu_restuarante, name= 'menu'),
+    path('agregar/<int:mesa_id>/<int:plato_id>/', agregar_producto_a_mesa, name= 'agregar_plato'),
 ]
