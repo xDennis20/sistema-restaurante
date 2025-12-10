@@ -49,6 +49,16 @@ class DetallePedido(models.Model):
     cantidad = models.IntegerField(verbose_name="Cantidad de plato")
     plato = models.ForeignKey(Plato, on_delete=models.PROTECT)
     nota = models.TextField(blank=True, null=True, verbose_name="Nota")
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
+
+    def save(self, *args, **kwargs):
+        if not self.precio_unitario:
+            self.precio_unitario = self.plato.precio
+        super().save(*args,**kwargs)
+
+    @property
+    def subtotal(self):
+        return self.cantidad * self.precio_unitario
 
     def __str__(self):
         return f"{self.cantidad}x {self.plato.nombre}"
