@@ -1,7 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
-
 from .models import Plato,Categoria,DetallePedido,Mesa,Pedido
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.admin.views.decorators import user_passes_test
 # Create your views here.
 
 def menu_restuarante(request,mesa_id: int):
@@ -68,7 +70,7 @@ def cobrar_mesa(request, mesa_id: int):
     mesa = get_object_or_404(Mesa,id=mesa_id)
     pedido = Pedido.objects.filter(mesa=mesa, estado="pendiente").first()
     if pedido:
-        pedido.estado = "estado"
+        pedido.estado = "pagado"
         pedido.save()
     return redirect('home')
 
@@ -92,3 +94,22 @@ def eliminar_detalle(request,detalle_id: int):
     detalle = get_object_or_404(DetallePedido,id=detalle_id)
     detalle.delete()
     return redirect("menu",mesa_id=detalle.pedido.mesa.id)
+
+def es_admin(user):
+    return user.is_staff
+
+@user_passes_test(es_admin)
+def reporte_ventas_hoy(request):
+    fecha_hoy = timezone.now().date()
+    ventas_hoy = Pedido.objects.filter(estado="pagado",creado_en__date= fecha_hoy)
+    print(f"DEBUG: Encontré {ventas_hoy.count()} pedidos pagados.")
+    total = 0
+    for venta in ventas_hoy:
+        total += sum(p.subtotal for p in venta.detallepedido_set.all())
+
+    contexto = {
+        "fecha_hoy" : fecha_hoy,
+        "ventas_hoy" : ventas_hoy,
+        "total" : total
+    }
+    return render(request,"core/reporte.html", contexto)

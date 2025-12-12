@@ -70,7 +70,8 @@
                     <div class="card-body text-center d-flex flex-column justify-content-between">
 
                         <!-- Título de la Mesa -->
-                        <h3 class="fw-bold mb-3">Mesa {{ mesa.numero }}</h3>
+                        <h3     style="color: white"
+                                class="fw-bold mb-3">Mesa {{ mesa.numero }}</h3>
 
                         {% if mesa.estado == 'ocupada' %}
                             <!-- ESTADO OCUPADO -->
@@ -98,7 +99,7 @@
                         {% else %}
                             <!-- ESTADO LIBRE -->
                             <div class="mb-3">
-                                <span class="badge bg-success badge-estado text-dark">🟢 Libre</span>
+                                <span class="badge bg-success badge-estado text-white">🟢 Libre</span>
                             </div>
                             <div class="mb-4 text-secondary">
                                 <small>Lista para clientes</small>
