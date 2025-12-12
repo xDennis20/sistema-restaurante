@@ -4,33 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Menú - Mesa {{ mesa.numero }}</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         /* Estilo Dark Mode */
-        body { background-color: #121212; color: #e0e0e0; padding-bottom: 80px; }
-
+        body { background-color: #121212; color: #e0e0e0; padding-bottom: 100px; }
         .navbar { background-color: #1f1f1f !important; border-bottom: 1px solid #333; }
 
-        /* Categorías deslizables */
+        /* Scroll de Categorías */
         .cat-scroll {
             overflow-x: auto;
             white-space: nowrap;
             padding: 10px 0;
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+            scrollbar-width: none;
         }
-        .cat-scroll::-webkit-scrollbar { display: none; } /* Chrome */
+        .cat-scroll::-webkit-scrollbar { display: none; }
 
         .btn-cat {
-            background-color: #2d2d2d;
-            color: white;
-            border: 1px solid #444;
-            border-radius: 20px;
-            padding: 8px 20px;
-            margin-right: 10px;
-            transition: 0.3s;
+            background-color: #2d2d2d; color: white;
+            border: 1px solid #444; border-radius: 20px;
+            padding: 8px 20px; margin-right: 10px; transition: 0.3s;
+            text-decoration: none;
         }
-        .btn-cat:hover { background-color: #0d6efd; border-color: #0d6efd; }
+        .btn-cat:hover, .btn-cat.active { background-color: #0d6efd; border-color: #0d6efd; }
 
         /* Tarjetas de Comida */
         .card-plato {
@@ -39,27 +35,24 @@
             border-radius: 15px;
             transition: transform 0.2s;
         }
-        .card-plato:active { transform: scale(0.98); border-color: #00c853; }
+        .precio-tag { color: #00e676; font-weight: bold; font-size: 1.2rem; }
 
-        .precio-tag {
-            font-size: 1.2rem;
-            color: #00e676; /* Verde Matrix */
-            font-weight: bold;
-        }
-
-        /* Botón Flotante para ver la cuenta */
+        /* Botón Flotante */
         .btn-flotante {
             position: fixed; bottom: 20px; left: 5%; right: 5%;
             border-radius: 50px; padding: 15px; font-weight: bold;
             box-shadow: 0 4px 20px rgba(0,255,0,0.2); z-index: 1000;
             background: linear-gradient(45deg, #00c853, #009624);
-            border: none;
+            border: none; color: white; font-size: 1.2rem;
         }
+
+        /* Panel Lateral Oscuro */
+        .offcanvas-dark { background-color: #1f1f1f; color: white; }
     </style>
 </head>
 <body>
 
-    <!-- Encabezado con Mesa -->
+    <!-- Encabezado -->
     <nav class="navbar navbar-dark sticky-top mb-3">
         <div class="container-fluid">
             <span class="navbar-brand fw-bold">🍽️ Mesa #{{ mesa.numero }}</span>
@@ -69,20 +62,20 @@
 
     <div class="container">
 
-        <!-- Categorías (Falsas por ahora, visuales) -->
+        <!-- Categorías (Filtros) -->
         <div class="cat-scroll mb-4">
-            <button class="btn btn-cat">🔥 Todos</button>
+            <a href="{% url 'menu' mesa.id %}" class="btn-cat active">🔥 Todo</a>
             {% for cat in categorias %}
-                <button class="btn btn-cat">{{ cat.nombre }}</button>
+                <a href="?categoria={{ cat.id }}" class="btn-cat">{{ cat.nombre }}</a>
             {% endfor %}
         </div>
 
         <h4 class="mb-3 text-secondary">Platos Disponibles</h4>
 
+        <!-- GRILLA DE PLATOS -->
         <div class="row g-3">
             {% for plato in productos %}
             <div class="col-12 col-md-6 col-lg-4">
-                <!-- Tarjeta del Plato -->
                 <div class="card card-plato h-100 shadow-sm">
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
@@ -96,24 +89,80 @@
                             {% endif %}
                         </div>
 
-                        <!-- BOTÓN AGREGAR (EL CEREBRO) -->
-                        <a href="{% url 'agregar_plato' mesa.id plato.id%}" class="btn btn-primary rounded-circle p-3 ms-2 shadow">
-                            ➕
-                        </a>
+                        <!-- FORMULARIO DE CANTIDAD Y AGREGAR -->
+                        <form action="{% url 'agregar_plato' mesa.id plato.id %}" method="POST" class="d-flex align-items-center">
+                            {% csrf_token %}
+                            <!-- Input numérico pequeño -->
+                            <input type="number" name="cantidad" value="1" min="1" class="form-control me-2 text-center p-1" style="width: 60px; background-color: #2d2d2d; color: white; border: 1px solid #444;">
+
+                            <!-- Botón Submit -->
+                            <button type="submit" class="btn btn-primary rounded-circle p-3 shadow border-0">
+                                ➕
+                            </button>
+                        </form>
+
                     </div>
                 </div>
             </div>
             {% empty %}
-                <p class="text-center text-muted mt-5">No hay platos disponibles en este momento.</p>
+                <div class="col-12 text-center mt-5">
+                    <h3 class="text-muted">No hay platos en esta categoría 😔</h3>
+                    <a href="{% url 'menu' mesa.id %}" class="btn btn-outline-light mt-3">Ver todo el menú</a>
+                </div>
             {% endfor %}
         </div>
 
     </div>
 
-    <!-- Botón Flotante para ir a la Comanda -->
-    <a href="{% url 'cuenta' mesa.id %}" class="btn btn-flotante text-white">
-        📝 VER COMANDA / PAGAR
-    </a>
+    <!-- BOTÓN FLOTANTE QUE ABRE EL CARRITO -->
+    <button class="btn btn-flotante" type="button" data-bs-toggle="offcanvas" data-bs-target="#carritoLateral">
+        🛒 Ver Pedido
+        {% if detalles_actuales %}
+            ({{ detalles_actuales|length }})
+        {% else %}
+            (0)
+        {% endif %}
+    </button>
 
+    <!-- PANEL LATERAL (CARRITO) -->
+    <div class="offcanvas offcanvas-end offcanvas-dark" tabindex="-1" id="carritoLateral">
+        <div class="offcanvas-header border-bottom border-secondary">
+            <h5 class="offcanvas-title fw-bold">📝 Pedido Mesa {{ mesa.numero }}</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+
+            {% if detalles_actuales %}
+                <ul class="list-group list-group-flush mb-4">
+                    {% for detalle in detalles_actuales %}
+                    <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center p-3">
+                        <div>
+                            <div class="fw-bold">{{ detalle.plato.nombre }}</div>
+                            <small class="text-muted">{{ detalle.cantidad }} x ${{ detalle.precio_unitario }}</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="me-3 fw-bold text-success">${{ detalle.subtotal }}</span>
+                            <!-- BOTÓN ELIMINAR (X) -->
+                            <a href="{% url 'eliminar_detalle' detalle.id %}" class="btn btn-sm btn-outline-danger border-0 fs-5">✖</a>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <a href="{% url 'cuenta' mesa.id %}" class="btn btn-success w-100 py-3 fw-bold rounded-pill">
+                    Ir a Pagar 💸
+                </a>
+            {% else %}
+                <div class="text-center mt-5 opacity-50">
+                    <div style="font-size: 4rem;">🛒</div>
+                    <p class="mt-3">El carrito está vacío</p>
+                    <small>Agrega platos usando el botón (+)</small>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
