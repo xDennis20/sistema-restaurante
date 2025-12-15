@@ -64,10 +64,18 @@
 
         <!-- Categorías (Filtros) -->
         <div class="cat-scroll mb-4">
-            <a href="{% url 'menu' mesa.id %}" class="btn-cat active">🔥 Todo</a>
-            {% for cat in categorias %}
-                <a href="?categoria={{ cat.id }}" class="btn-cat">{{ cat.nombre }}</a>
-            {% endfor %}
+            <a href="{% url 'menu' mesa.id %}"
+           class="btn btn-cat {% if not request.GET.categoria %}active{% endif %}">
+            🔥 Todo
+        </a>
+
+        {% for cat in categorias %}
+
+            <a href="?categoria={{ cat.id }}"
+               class="btn btn-cat {% if request.GET.categoria == cat.id|stringformat:'i' %}active{% endif %}">
+                {{ cat.nombre }}
+            </a>
+        {% endfor %}
         </div>
 
         <h4 class="mb-3 text-secondary">Platos Disponibles</h4>
@@ -79,7 +87,7 @@
                 <div class="card card-plato h-100 shadow-sm">
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
-                            <h5 class="card-title mb-1 fw-bold">{{ plato.nombre }}</h5>
+                            <h5 class="card-title mb-1 fw-bold" style="color: white">{{ plato.nombre }}</h5>
                             <small class="text-secondary d-block mb-2">
                                 {{ plato.descripcion|default:"Delicioso plato de la casa" }}
                             </small>

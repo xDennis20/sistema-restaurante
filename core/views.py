@@ -1,4 +1,4 @@
-from django.db.models import QuerySet
+from django.db.models import QuerySet,Count
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from .models import Plato,Categoria,DetallePedido,Mesa,Pedido
@@ -106,6 +106,18 @@ def eliminar_detalle(request,detalle_id: int):
     detalle = get_object_or_404(DetallePedido,id=detalle_id)
     detalle.delete()
     return redirect("menu",mesa_id=detalle.pedido.mesa.id)
+
+def crear_mesa(request):
+    ultima_mesa = Mesa.objects.order_by("numero").last()
+    if ultima_mesa:
+        nuevo_numero = ultima_mesa.numero + 1
+    else:
+        nuevo_numero = ultima_mesa.numero = 1
+    Mesa.objects.create(
+        numero=nuevo_numero,
+        nombre=f"Mesa {nuevo_numero}"
+    )
+    return redirect("home")
 
 def es_admin(user):
     return user.is_staff

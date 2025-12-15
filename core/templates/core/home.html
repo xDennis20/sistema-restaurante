@@ -53,12 +53,38 @@
     <nav class="navbar navbar-dark bg-dark mb-5 border-bottom border-secondary">
         <div class="container">
             <span class="navbar-brand mb-0 h1 fw-bold">🐟 CevicheOS <span class="badge bg-primary ms-2">v1.0</span></span>
-            <span class="text-secondary small">Usuario: Admin</span>
+            <span class="text-secondary small">
+                {% if user.is_authenticated %}
+                    Usuario: {{ user.username }}
+                {% else %}
+                    <a href="{% url 'login' %}" class="text-decoration-none text-info">Iniciar Sesión</a>
+                {% endif %}
+            </span>
         </div>
     </nav>
 
     <div class="container">
-        <h2 class="text-center mb-5 text-white fw-light">🗺️ Mapa de Mesas en Tiempo Real</h2>
+        <h2 class="text-center mb-4 text-white fw-light">🗺️ Mapa de Mesas en Tiempo Real</h2>
+
+        <!-- ZONA DE ADMINISTRACIÓN (Solo visible para el Jefe) -->
+        <!-- Lo ponemos aquí, justo debajo del título -->
+        {% if user.is_staff %}
+            <div class="d-flex justify-content-center gap-3 mb-5 animate__animated animate__fadeInDown">
+
+                <!-- Botón 1: Reporte de Ventas -->
+                <a href="{% url 'reporte' %}" class="btn btn-warning fw-bold shadow-lg rounded-pill px-4">
+                    📊 Ver Cierre de Caja
+                </a>
+
+                <!-- Botón 2: Crear Nueva Mesa (Con confirmación) -->
+                <a href="{% url 'crear_mesa' %}"
+                   class="btn btn-outline-light fw-bold shadow-lg rounded-pill px-4"
+                   onclick="return confirm('¿Confirmas crear una NUEVA mesa vacía?');">
+                    🏗️ + Nueva Mesa
+                </a>
+
+            </div>
+        {% endif %}
 
         <div class="row g-4 justify-content-center">
             {% for mesa in mesas %}
@@ -70,8 +96,7 @@
                     <div class="card-body text-center d-flex flex-column justify-content-between">
 
                         <!-- Título de la Mesa -->
-                        <h3     style="color: white"
-                                class="fw-bold mb-3">Mesa {{ mesa.numero }}</h3>
+                        <h3 class="fw-bold mb-3" style="color: white">Mesa {{ mesa.numero }}</h3>
 
                         {% if mesa.estado == 'ocupada' %}
                             <!-- ESTADO OCUPADO -->
@@ -83,15 +108,12 @@
                                 <span class="precio-pendiente">${{ mesa.total_pendiente }}</span>
                             </div>
 
-                            <!-- AQUI ESTÁ EL CAMBIO: Dos botones en lugar de uno -->
+                            <!-- BOTONES DE ACCIÓN MESA OCUPADA -->
                             <div class="d-grid gap-2">
-                                <!-- Botón 1: Ir a pedir más (Usa la misma URL del menú) -->
                                 <a href="{% url 'menu' mesa.id %}" class="btn btn-primary fw-bold shadow-sm">
                                     ➕ Pedir Más
                                 </a>
-
-                                <!-- Botón 2: Ver la cuenta -->
-                                <a href="{% url 'cuenta' mesa.id %}" class="btn btn-outline-danger fw-bold">
+                                <a href="{% url 'ver_pedido' mesa.id %}" class="btn btn-outline-danger fw-bold">
                                     👁️ Ver Cuenta
                                 </a>
                             </div>
@@ -99,7 +121,7 @@
                         {% else %}
                             <!-- ESTADO LIBRE -->
                             <div class="mb-3">
-                                <span class="badge bg-success badge-estado text-white">🟢 Libre</span>
+                                <span class="badge bg-success badge-estado text-dark">🟢 Libre</span>
                             </div>
                             <div class="mb-4 text-secondary">
                                 <small>Lista para clientes</small>
