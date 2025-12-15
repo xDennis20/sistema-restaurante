@@ -2,15 +2,16 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from .models import Plato,Categoria,DetallePedido,Mesa,Pedido
 from django.utils import timezone
-from datetime import timedelta
 from django.contrib.admin.views.decorators import user_passes_test
 # Create your views here.
-
-def menu_restuarante(request,mesa_id: int):
+def obtener_datos_mesa(mesa_id: int):
     mesa = get_object_or_404(Mesa, id= mesa_id)
+    pedido = Pedido.objects.filter(mesa=mesa,estado="pendiente").first()
+    return mesa,pedido
+def menu_restuarante(request,mesa_id: int):
+    mesa,pedido_actual = obtener_datos_mesa(mesa_id)
     cargar_productos = Plato.objects.filter(disponible=True)
     cargar_categorias = Categoria.objects.all()
-    pedido_actual = Pedido.objects.filter(mesa=mesa_id, estado="pendiente").first()
     detalles_actual = pedido_actual.detallepedido_set.all() if pedido_actual else []
 
     contexto = {
@@ -40,14 +41,13 @@ def agregar_producto_a_mesa(request,mesa_id: int,plato_id: int):
     else:
         DetallePedido.objects.create(
             pedido = pedido,
-            cantidad = 1,
+            cantidad = cantidad_recibida,
             plato = plato,
         )
     return redirect("menu",mesa_id=mesa_id)
 
 def ver_cuenta(request, mesa_id: int):
-    mesa = get_object_or_404(Mesa,id=mesa_id)
-    pedido = Pedido.objects.filter(mesa=mesa,estado="pendiente").first()
+    mesa,pedido = obtener_datos_mesa(mesa_id)
     if pedido:
         detalles = pedido.detallepedido_set.all()
         total = 0
