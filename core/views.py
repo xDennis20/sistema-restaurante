@@ -1,22 +1,34 @@
+from django.db.models import QuerySet
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from .models import Plato,Categoria,DetallePedido,Mesa,Pedido
 from django.utils import timezone
 from django.contrib.admin.views.decorators import user_passes_test
 # Create your views here.
-def obtener_datos_mesa(mesa_id: int):
+def obtener_datos_mesa(mesa_id: int) -> tuple:
     mesa = get_object_or_404(Mesa, id= mesa_id)
     pedido = Pedido.objects.filter(mesa=mesa,estado="pendiente").first()
     return mesa,pedido
+
+def filtrar_categorias_platos(platos:QuerySet, categoria_id: int):
+    if categoria_id:
+        return platos.filter(categoria_id= categoria_id)
+    return platos
 def menu_restuarante(request,mesa_id: int):
     mesa,pedido_actual = obtener_datos_mesa(mesa_id)
-    cargar_productos = Plato.objects.filter(disponible=True)
+    cargar_platos = Plato.objects.filter(disponible=True)
     cargar_categorias = Categoria.objects.all()
+    categoria_id = request.GET.get("categoria")
+    if categoria_id:
+        try:
+            cargar_platos = filtrar_categorias_platos(cargar_platos,int(categoria_id))
+        except ValueError:
+            pass
     detalles_actual = pedido_actual.detallepedido_set.all() if pedido_actual else []
 
     contexto = {
         "mesa" : mesa,
-        "productos" : cargar_productos,
+        "productos" : cargar_platos,
         "categorias" : cargar_categorias,
         "detalles_actuales": detalles_actual,
         "pedido_actual" : pedido_actual,

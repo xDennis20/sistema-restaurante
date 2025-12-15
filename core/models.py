@@ -18,6 +18,7 @@ class Plato(models.Model):
     nombre = models.CharField(max_length=200)
     precio = models.DecimalField(max_digits=10,decimal_places=2)
     descripcion = models.TextField(blank=True,null=True, verbose_name="Descripicion")
+    categoria = models.ForeignKey(Categoria,on_delete=models.PROTECT)
     disponible = models.BooleanField(default=True,verbose_name= "Disponible?")
     talla = models.CharField(max_length=1, choices=TALLAS, default="U", verbose_name= "Tamaño")
 
