@@ -1,4 +1,5 @@
-from django.db.models import QuerySet,Count
+from django.contrib.auth.decorators import login_required
+from django.db.models import QuerySet, Sum, F
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from .models import Plato,Categoria,DetallePedido,Mesa,Pedido
@@ -85,7 +86,7 @@ def cobrar_mesa(request, mesa_id: int):
         pedido.estado = "pagado"
         pedido.save()
     return redirect('home')
-
+@login_required
 def home(request):
     mesas = Mesa.objects.all()
     for mesa in mesas:
@@ -126,14 +127,11 @@ def es_admin(user):
 def reporte_ventas_hoy(request):
     fecha_hoy = timezone.now().date()
     ventas_hoy = Pedido.objects.filter(estado="pagado",creado_en__date= fecha_hoy)
-    print(f"DEBUG: Encontré {ventas_hoy.count()} pedidos pagados.")
-    total = 0
-    for venta in ventas_hoy:
-        total += sum(p.subtotal for p in venta.detallepedido_set.all())
-
+    ventas_con_totales = ventas_hoy.annotate(total_calculado= Sum( F("detallepedido__precio_unitario") * F("detallepedido__cantidad")))
+    total_dia = sum((venta.total_calculado or 0) for venta in ventas_con_totales)
     contexto = {
         "fecha_hoy" : fecha_hoy,
-        "ventas_hoy" : ventas_hoy,
-        "total" : total
+        "ventas_hoy" : ventas_con_totales,
+        "total" : total_dia
     }
     return render(request,"core/reporte.html", contexto)

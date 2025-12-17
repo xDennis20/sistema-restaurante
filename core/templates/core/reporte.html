@@ -84,6 +84,7 @@
                                         <th># Orden</th>
                                         <th>Mesa</th>
                                         <th>Hora</th>
+                                        <td class="fw-bold">Total Pedido</td>
                                         <th>Estado</th>
                                     </tr>
                                 </thead>
@@ -93,6 +94,7 @@
                                         <td class="fw-bold">#{{ venta.id }}</td>
                                         <td>{{ venta.mesa }}</td>
                                         <td>{{ venta.creado_en|time:"H:i" }}</td> <!-- Filtro de hora -->
+                                        <td>${{ venta.total_calculado | default:0.00 }}</td>
                                         <td><span class="badge bg-success">Pagado ✅</span></td>
                                     </tr>
                                     {% empty %}
