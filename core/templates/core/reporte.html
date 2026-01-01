@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐟</text></svg>">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Cierre de Caja - {{ fecha_hoy }}</title>
@@ -60,7 +61,7 @@
                         <h5 class="text-secondary text-uppercase ls-2">Total Recaudado Hoy</h5>
 
                         <!-- EL NÚMERO IMPORTANTE -->
-                        <h1 class="total-gigante my-3">${{ total }}</h1>
+                        <h1 class="total-gigante my-3">${{ total | floatformat:2 }}</h1>
 
                         <div class="row mt-5">
                             <div class="col-6 border-end">
@@ -94,7 +95,7 @@
                                         <td class="fw-bold">#{{ venta.id }}</td>
                                         <td>{{ venta.mesa }}</td>
                                         <td>{{ venta.creado_en|time:"H:i" }}</td> <!-- Filtro de hora -->
-                                        <td>${{ venta.total_calculado | default:0.00 }}</td>
+                                        <td>${{ venta.total_calculado | default:0.00 | floatformat:2 }}</td>
                                         <td><span class="badge bg-success">Pagado ✅</span></td>
                                     </tr>
                                     {% empty %}
