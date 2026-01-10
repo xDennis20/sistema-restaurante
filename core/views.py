@@ -123,6 +123,24 @@ def crear_mesa(request):
 def es_admin(user):
     return user.is_staff
 
+def historial_pedidos(request):
+    fecha_inicio = request.GET.get('inicio')
+    fecha_final = request.GET.get('fin')
+    mesero_id = request.GET.get('mesero')
+    pedidos = Pedido.objects.all().prefetch_related("detallepedido_set__plato")
+
+    if mesero_id:
+        pedidos = pedidos.filter(mesero_id = mesero_id)
+    if fecha_inicio and fecha_final:
+        pedidos = pedidos.filter(creado_en__date__range=(fecha_inicio, fecha_final))
+    total_pedido = pedidos.annotate(total_calculado= Sum(F("detallepedido__precio_unitario") * F("detallepedido__cantidad")))
+    total_general = sum((pedido.total_calculado or 0) for pedido in total_pedido)
+    contexto = {
+        "pedidos": total_pedido,
+        "total_general": total_general
+    }
+    return render(request,"core/Historial_Ventas.html",contexto)
+
 @user_passes_test(es_admin)
 def reporte_ventas_hoy(request):
     fecha_hoy = timezone.now().date()

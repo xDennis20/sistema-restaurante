@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Historial de Ventas 📅</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
+        .card-filter { border-left: 5px solid #0d6efd; }
+        /* Sombra suave interna para cuando se abre el detalle */
+        .shadow-inset { box-shadow: inset 0 0 10px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+    <!-- Navegación -->
+    <nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
+        <div class="container">
+            <span class="navbar-brand fw-bold">📊 Historial de Pedidos</span>
+            <a href="{% url 'home' %}" class="btn btn-sm btn-outline-secondary">Volver al Mapa</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- 1. FORMULARIO DE FILTROS -->
+        <div class="card card-filter shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">🔍 Filtrar por Fecha</h5>
+
+                <form method="GET" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-bold">FECHA INICIO</label>
+                        <!-- El value mantiene la fecha seleccionada después de recargar -->
+                        <input type="date" name="inicio" class="form-control" value="{{ request.GET.inicio }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-bold">FECHA FIN</label>
+                        <input type="date" name="fin" class="form-control" value="{{ request.GET.fin }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary fw-bold">
+                                🐆 Filtrar Resultados
+                            </button>
+                            <a href="{% url 'historial' %}" class="btn btn-outline-secondary btn-sm">Limpiar</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 2. TABLA DE RESULTADOS -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 text-secondary">Resultados de la Búsqueda</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th># ID</th>
+                            <th>Fecha y Hora</th>
+                            <th>Mesa</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-center">Detalles</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pedido in pedidos %}
+                        <!-- FILA PRINCIPAL (Resumen) -->
+                        <tr>
+                            <td class="fw-bold text-muted">#{{ pedido.id }}</td>
+                            <td>{{ pedido.creado_en|date:"d M Y - H:i" }}</td>
+                            <td>{{ pedido.mesa }}</td>
+
+                            <!-- Total calculado en la vista (annotate) -->
+                            <td class="text-end fw-bold text-success fs-5">
+                                ${{ pedido.total_calculado|default:"0.00" }}
+                            </td>
+
+                            <td class="text-center">
+                                <!-- Botón Desplegable -->
+                                <!-- data-bs-target apunta al ID único del pedido -->
+                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#detalles-{{ pedido.id }}">
+                                    👁️ Ver Platos
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- FILA OCULTA (Detalles Desplegables) -->
+                        <!-- Esta fila está escondida hasta que das clic al botón -->
+                        <tr>
+                            <td colspan="5" class="p-0 border-0">
+                                <!-- Este DIV tiene el ID único que busca el botón -->
+                                <div class="collapse bg-light p-4 shadow-inset border-bottom" id="detalles-{{ pedido.id }}">
+                                    <h6 class="text-secondary text-uppercase small fw-bold mb-3">📝 Contenido del Pedido #{{ pedido.id }}</h6>
+
+                                    <ul class="list-group list-group-flush rounded border">
+                                        {% for detalle in pedido.detallepedido_set.all %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center bg-white">
+                                            <div>
+                                                <span class="badge bg-secondary me-2">{{ detalle.cantidad }}x</span>
+                                                <span class="fw-bold text-dark">{{ detalle.plato.nombre }}</span>
+                                                {% if detalle.nota %}
+                                                    <br><small class="text-muted ms-4">Nota: {{ detalle.nota }}</small>
+                                                {% endif %}
+                                            </div>
+                                            <div class="text-end">
+                                                <small class="text-muted d-block" style="font-size: 0.8rem;">Unit: ${{ detalle.precio_unitario }}</small>
+                                                <strong class="text-dark">${{ detalle.subtotal }}</strong>
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <div style="font-size: 3rem;">📭</div>
+                                <h4 class="mt-2">Sin resultados</h4>
+                                <p>No se encontraron ventas en este rango de fechas.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                    <!-- Pie de tabla con el Gran Total -->
+                    <tfoot class="table-dark">
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold text-uppercase p-3">Total del Periodo:</td>
+                            <td class="text-end fw-bold fs-4 p-3 text-warning">${{ total_general|default:"0.00" }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts de Bootstrap (Obligatorio para que funcione el botón desplegable) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
